@@ -1,7 +1,7 @@
 {
-  "name": "ScrollFree",
-  "short_name": "ScrollFree",
-  "description": "Break the scroll. Live more.",
+  "name": "LiveMore",
+  "short_name": "LiveMore",
+  "description": "Live more. Scroll less.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a1a0f",

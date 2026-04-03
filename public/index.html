@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a1a0f">
-  <title>ScrollFree</title>
+  <title>LiveMore</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <style>
@@ -994,7 +994,7 @@
           <text x="40" y="55" text-anchor="middle" font-family="-apple-system, 'SF Pro Display', sans-serif" font-size="14" font-weight="800" fill="url(#boxGrad)" letter-spacing="1">MORE</text>
         </svg>
       </div>
-      <div class="hero-title">ScrollFree</div>
+      <div class="hero-title">LiveMore</div>
       <div class="hero-sub">Live more. Scroll less.</div>
     </div>
 
@@ -1078,7 +1078,7 @@
       <div class="friend-card" onclick="inviteFriend()">
         <div class="friend-card-icon">&#x1F91D;</div>
         <div class="friend-card-text">
-          <div class="friend-card-title">Invite to ScrollFree</div>
+          <div class="friend-card-title">Invite to LiveMore</div>
           <div class="friend-card-desc">Get a friend to join and both earn 50 bonus XP</div>
         </div>
         <div class="friend-card-arrow">&#x203A;</div>
@@ -1272,7 +1272,7 @@
 
 <script>
   // ==================== DATA STORE ====================
-  const STORAGE_KEY = 'scrollfree_data';
+  const STORAGE_KEY = 'livemore_data';
 
   const DEFAULT_DATA = {
     streak: 0,
@@ -1860,10 +1860,10 @@
 
   // ==================== SHARING ====================
   function shareStreak() {
-    const text = `I'm on a ${data.streak}-day streak on ScrollFree! ${data.totalMinutes} minutes spent living instead of scrolling. Level ${data.level} ${getLevel(data.totalXP).name}. Try it!`;
+    const text = `I'm on a ${data.streak}-day streak on LiveMore! ${data.totalMinutes} minutes spent living instead of scrolling. Level ${data.level} ${getLevel(data.totalXP).name}. Try it!`;
 
     if (navigator.share) {
-      navigator.share({ title: 'ScrollFree', text }).catch(() => {});
+      navigator.share({ title: 'LiveMore', text }).catch(() => {});
     } else {
       navigator.clipboard.writeText(text).then(() => {
         alert('Copied to clipboard!');
@@ -1875,11 +1875,11 @@
   function challengeFriend() {
     const challenges = getTodayChallenges();
     const randomChallenge = challenges[Math.floor(Math.random() * challenges.length)];
-    const text = `${randomChallenge.emoji} I challenge you to: ${randomChallenge.title}!\n\n${randomChallenge.desc}\n\nCan you beat my ${data.streak}-day streak on ScrollFree? Download and let's see who can stay off their phone longer!\n\nscrollfree.app`;
+    const text = `${randomChallenge.emoji} I challenge you to: ${randomChallenge.title}!\n\n${randomChallenge.desc}\n\nCan you beat my ${data.streak}-day streak on LiveMore? Download and let's see who can stay off their phone longer!\n\nlivemore.app`;
 
     if (navigator.share) {
       navigator.share({
-        title: 'ScrollFree Challenge',
+        title: 'LiveMore Challenge',
         text: text
       }).catch(() => {});
     } else {
@@ -1896,11 +1896,11 @@
 
   function inviteFriend() {
     const lvl = getLevel(data.totalXP);
-    const text = `I've been using ScrollFree to break my doomscrolling habit. I'm on a ${data.streak}-day streak and Level ${LEVELS.indexOf(lvl) + 1} ${lvl.name}!\n\nIt has a spin wheel for daily challenges, sticker rewards, and focus timers. It's actually fun to NOT scroll.\n\nTry it: scrollfree.app`;
+    const text = `I've been using LiveMore to break my doomscrolling habit. I'm on a ${data.streak}-day streak and Level ${LEVELS.indexOf(lvl) + 1} ${lvl.name}!\n\nIt has a spin wheel for daily challenges, sticker rewards, and focus timers. It's actually fun to NOT scroll.\n\nTry it: livemore.app`;
 
     if (navigator.share) {
       navigator.share({
-        title: 'Join me on ScrollFree!',
+        title: 'Join me on LiveMore!',
         text: text
       }).catch(() => {});
     } else {
