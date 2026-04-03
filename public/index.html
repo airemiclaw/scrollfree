@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a1a0f">
+  <title>ScrollFree</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a1a0f;
+      --surface: #0f2416;
+      --surface2: #142e1c;
+      --surface3: #1a3823;
+      --border: #1e4a2a;
+      --text: #e8f5ec;
+      --text2: #7aab8a;
+      --green: #22c55e;
+      --green-glow: #22c55e44;
+      --lime: #84cc16;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --white: #ffffff;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==================== APP SHELL ==================== */
+    .app {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+      position: relative;
+      padding-bottom: 80px;
+    }
+
+    /* ==================== SCREENS ==================== */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ==================== NAV BAR ==================== */
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 env(safe-area-inset-bottom, 8px);
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 16px;
+      background: none;
+      border: none;
+      color: var(--text2);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .nav-btn.active { color: var(--green); }
+    .nav-btn svg { width: 24px; height: 24px; }
+
+    /* ==================== HOME SCREEN ==================== */
+    .home-hero {
+      text-align: center;
+      padding: 40px 24px 20px;
+    }
+
+    .hero-icon {
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .hero-icon svg {
+      width: 72px;
+      height: 72px;
+    }
+
+    .hero-title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--green), var(--lime));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      color: var(--text2);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    /* Streak Ring */
+    .streak-ring-container {
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .streak-ring {
+      position: relative;
+      width: 220px;
+      height: 220px;
+    }
+
+    .streak-ring svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .streak-ring-bg {
+      fill: none;
+      stroke: var(--surface2);
+      stroke-width: 12;
+    }
+
+    .streak-ring-progress {
+      fill: none;
+      stroke: url(#greenGradient);
+      stroke-width: 12;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s ease;
+    }
+
+    .streak-ring-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .streak-number {
+      font-size: 56px;
+      font-weight: 800;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    .streak-label {
+      font-size: 13px;
+      color: var(--text2);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      padding: 0 24px;
+      margin-bottom: 24px;
+    }
+
+    .stat-box {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-box .value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .stat-box .label {
+      font-size: 11px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    /* Today's Challenge */
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      padding: 0 24px;
+      margin-bottom: 12px;
+    }
+
+    .challenge-card {
+      margin: 0 24px 16px;
+      background: linear-gradient(135deg, var(--surface2), var(--surface3));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .challenge-card:hover {
+      transform: scale(1.01);
+      border-color: var(--green);
+    }
+
+    .challenge-card.completed {
+      border-color: var(--green);
+      background: linear-gradient(135deg, #0f2a18, #1a3823);
+    }
+
+    .challenge-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .challenge-emoji { font-size: 28px; }
+
+    .challenge-xp {
+      background: var(--green-glow);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .challenge-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .challenge-desc {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.4;
+    }
+
+    .challenge-check {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .challenge-card.completed .challenge-check {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    /* Focus Timer Button */
+    .focus-btn {
+      display: block;
+      width: calc(100% - 48px);
+      margin: 24px auto;
+      padding: 18px;
+      background: linear-gradient(135deg, var(--green), var(--emerald));
+      border: none;
+      border-radius: var(--radius);
+      color: var(--bg);
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 24px var(--green-glow);
+    }
+
+    .focus-btn:hover { transform: scale(1.02); }
+    .focus-btn:active { transform: scale(0.98); }
+
+    /* ==================== TIMER SCREEN ==================== */
+    .timer-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 40px 24px 100px;
+      text-align: center;
+    }
+
+    .timer-label {
+      font-size: 14px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .timer-display {
+      font-size: 80px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--green);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .timer-message {
+      font-size: 16px;
+      color: var(--text2);
+      margin-bottom: 40px;
+      line-height: 1.5;
+      max-width: 280px;
+    }
+
+    .timer-presets {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .preset-btn {
+      padding: 10px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .preset-btn.active {
+      background: var(--green);
+      border-color: var(--green);
+      color: var(--bg);
+    }
+
+    .timer-control-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: none;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .timer-control-btn:active { transform: scale(0.95); }
+
+    .timer-start {
+      background: var(--green);
+      color: var(--bg);
+      box-shadow: 0 4px 24px var(--green-glow);
+    }
+
+    .timer-stop {
+      background: var(--red);
+      color: white;
+    }
+
+    .timer-actions {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .timer-cancel {
+      background: var(--surface2);
+      color: var(--text2);
+      border: 1px solid var(--border);
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Timer animation */
+    .timer-bg-pulse {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: var(--green-glow);
+      opacity: 0;
+      z-index: -1;
+      animation: pulse 3s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      50% { opacity: 0.3; transform: translate(-50%, -50%) scale(1.2); }
+    }
+
+    /* ==================== STATS SCREEN ==================== */
+    .stats-screen { padding: 40px 24px 100px; }
+
+    .stats-header {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 24px;
+    }
+
+    .week-grid {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .week-day {
+      flex: 1;
+      text-align: center;
+    }
+
+    .week-day .day-label {
+      font-size: 11px;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    .week-day .day-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .week-day .day-dot.completed {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .week-day .day-dot.today {
+      border-color: var(--green);
+    }
+
+    .big-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .big-stat .value {
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    .big-stat .label {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    .level-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .level-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .level-name {
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .level-xp {
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    .level-track {
+      width: 100%;
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .level-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--lime));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    /* ==================== SETTINGS SCREEN ==================== */
+    .settings-screen { padding: 40px 24px 100px; }
+
+    .settings-header {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 24px;
+    }
+
+    .setting-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .setting-row {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting-row:last-child { border-bottom: none; }
+
+    .setting-label {
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .setting-sub {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .toggle {
+      width: 50px;
+      height: 30px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .toggle.on {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .toggle-dot {
+      width: 24px;
+      height: 24px;
+      background: var(--white);
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: left 0.3s;
+    }
+
+    .toggle.on .toggle-dot { left: 22px; }
+
+    .share-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--green);
+      border-radius: var(--radius);
+      color: var(--green);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s;
+    }
+
+    .share-btn:hover {
+      background: var(--green);
+      color: var(--bg);
+    }
+
+    /* ==================== CELEBRATION ==================== */
+    .celebration-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 26, 15, 0.95);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .celebration-overlay.show { display: flex; }
+
+    .celebration-emoji { font-size: 80px; }
+
+    .celebration-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .celebration-sub {
+      font-size: 16px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+
+    .celebration-xp {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--lime);
+    }
+
+    .celebration-btn {
+      margin-top: 16px;
+      padding: 16px 40px;
+      background: var(--green);
+      border: none;
+      border-radius: var(--radius);
+      color: var(--bg);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      top: -10px;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      z-index: 201;
+      animation: confettiFall 3s linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ==================== CHALLENGE A FRIEND ==================== */
+    .friend-section {
+      padding: 0 24px;
+      margin-bottom: 24px;
+    }
+
+    .friend-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .friend-card:hover {
+      border-color: var(--green);
+      transform: translateX(4px);
+    }
+
+    .friend-card-icon { font-size: 28px; flex-shrink: 0; }
+    .friend-card-text { flex: 1; }
+    .friend-card-title { font-size: 15px; font-weight: 700; }
+    .friend-card-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .friend-card-arrow { font-size: 24px; color: var(--text2); }
+
+    /* ==================== SPIN WHEEL ==================== */
+    .wheel-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 24px 8px;
+    }
+
+    .wheel-container.spun .spin-btn { display: none; }
+
+    .wheel-wrapper {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin-bottom: 16px;
+    }
+
+    .wheel-pointer {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 28px;
+      color: var(--green);
+      z-index: 10;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+
+    #wheelCanvas {
+      border-radius: 50%;
+      box-shadow: 0 0 30px var(--green-glow), 0 0 0 4px var(--border);
+    }
+
+    .spin-btn {
+      padding: 14px 48px;
+      background: linear-gradient(135deg, var(--green), var(--lime));
+      border: none;
+      border-radius: 30px;
+      color: var(--bg);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px var(--green-glow);
+    }
+
+    .spin-btn:hover { transform: scale(1.05); }
+    .spin-btn:active { transform: scale(0.95); }
+    .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .won-challenge {
+      margin: 12px 24px;
+      background: linear-gradient(135deg, #0f2a18, #1a4025);
+      border: 2px solid var(--green);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      animation: wonPop 0.5s ease;
+    }
+
+    @keyframes wonPop {
+      0% { transform: scale(0.8); opacity: 0; }
+      60% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .won-emoji { font-size: 48px; margin-bottom: 8px; }
+    .won-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .won-desc { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
+    .won-xp { color: var(--lime); font-weight: 800; font-size: 16px; margin-bottom: 12px; }
+
+    .won-accept-btn {
+      padding: 12px 32px;
+      background: var(--green);
+      border: none;
+      border-radius: 12px;
+      color: var(--bg);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin: 4px;
+    }
+
+    .won-skip-btn {
+      padding: 12px 32px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text2);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 4px;
+    }
+
+    .spins-left {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 8px;
+    }
+
+    /* ==================== REWARDS SCREEN ==================== */
+    .rewards-screen { padding: 40px 24px 100px; }
+    .rewards-header { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .rewards-sub { font-size: 14px; color: var(--text2); margin-bottom: 24px; }
+
+    .rewards-collected {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .sticker-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 8px;
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sticker-card.locked {
+      opacity: 0.35;
+      filter: grayscale(1);
+    }
+
+    .sticker-card.unlocked {
+      border-color: var(--green);
+      background: linear-gradient(135deg, var(--surface), var(--surface2));
+    }
+
+    .sticker-card.unlocked.new-unlock {
+      animation: stickerPop 0.5s ease;
+    }
+
+    @keyframes stickerPop {
+      0% { transform: scale(0.8); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .sticker-emoji {
+      font-size: 40px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .sticker-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .sticker-req {
+      font-size: 9px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    .sticker-card.unlocked .sticker-req {
+      color: var(--green);
+    }
+
+    .sticker-card .glow {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, var(--green-glow), transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .sticker-card.unlocked .glow { opacity: 1; }
+
+    .sticker-card .lock-icon {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 12px;
+      opacity: 0.5;
+    }
+
+    /* Sticker unlock popup */
+    .sticker-popup {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 26, 15, 0.95);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 300;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .sticker-popup.show { display: flex; }
+
+    .sticker-popup-emoji {
+      font-size: 100px;
+      animation: stickerReveal 0.8s ease;
+    }
+
+    @keyframes stickerReveal {
+      0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+      60% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .sticker-popup-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .sticker-popup-subtitle {
+      font-size: 14px;
+      color: var(--text2);
+    }
+
+    .sticker-popup-label {
+      font-size: 12px;
+      color: var(--lime);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-weight: 700;
+    }
+
+    .sticker-popup-btn {
+      margin-top: 16px;
+      padding: 14px 40px;
+      background: var(--green);
+      border: none;
+      border-radius: var(--radius);
+      color: var(--bg);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ==================== HOME ==================== -->
+  <div class="screen active" id="screenHome">
+    <div class="home-hero">
+      <div class="hero-icon">
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#22c55e"/>
+              <stop offset="100%" stop-color="#84cc16"/>
+            </linearGradient>
+          </defs>
+          <rect x="4" y="4" width="72" height="72" rx="18" fill="none" stroke="url(#boxGrad)" stroke-width="4"/>
+          <text x="40" y="35" text-anchor="middle" font-family="-apple-system, 'SF Pro Display', sans-serif" font-size="14" font-weight="800" fill="url(#boxGrad)" letter-spacing="1">LIVE</text>
+          <text x="40" y="55" text-anchor="middle" font-family="-apple-system, 'SF Pro Display', sans-serif" font-size="14" font-weight="800" fill="url(#boxGrad)" letter-spacing="1">MORE</text>
+        </svg>
+      </div>
+      <div class="hero-title">ScrollFree</div>
+      <div class="hero-sub">Live more. Scroll less.</div>
+    </div>
+
+    <div class="streak-ring-container">
+      <div class="streak-ring">
+        <svg viewBox="0 0 200 200">
+          <defs>
+            <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#22c55e"/>
+              <stop offset="100%" stop-color="#84cc16"/>
+            </linearGradient>
+          </defs>
+          <circle class="streak-ring-bg" cx="100" cy="100" r="85"/>
+          <circle class="streak-ring-progress" id="streakProgress" cx="100" cy="100" r="85"
+            stroke-dasharray="534" stroke-dashoffset="534"/>
+        </svg>
+        <div class="streak-ring-center">
+          <div class="streak-number" id="streakCount">0</div>
+          <div class="streak-label">Day Streak</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="value" id="todayMinutes">0</div>
+        <div class="label">Min Today</div>
+      </div>
+      <div class="stat-box">
+        <div class="value" id="totalXP">0</div>
+        <div class="label">Total XP</div>
+      </div>
+      <div class="stat-box">
+        <div class="value" id="levelDisplay">1</div>
+        <div class="label">Level</div>
+      </div>
+    </div>
+
+    <!-- Spin Wheel Section -->
+    <div class="section-title" id="wheelTitle">Spin for Today's Challenge</div>
+    <div class="wheel-container" id="wheelContainer">
+      <div class="wheel-wrapper">
+        <div class="wheel-pointer">&#x25BC;</div>
+        <canvas id="wheelCanvas" width="300" height="300"></canvas>
+      </div>
+      <button class="spin-btn" id="spinBtn" onclick="spinWheel()">
+        SPIN!
+      </button>
+    </div>
+
+    <!-- Won challenge display -->
+    <div class="won-challenge" id="wonChallenge" style="display:none;"></div>
+
+    <!-- Completed challenges -->
+    <div class="section-title" style="margin-top:16px;">Today's Challenges</div>
+    <div id="challengesList"></div>
+
+    <button class="focus-btn" onclick="showScreen('timer')">
+      Start Focus Session
+    </button>
+
+    <!-- Challenge a Friend -->
+    <div class="section-title" style="margin-top:24px;">Challenge a Friend</div>
+    <div class="friend-section">
+      <div class="friend-card" onclick="challengeFriend()">
+        <div class="friend-card-icon">&#x1F4E8;</div>
+        <div class="friend-card-text">
+          <div class="friend-card-title">Send a Challenge</div>
+          <div class="friend-card-desc">Dare a friend to go screen-free. You both earn bonus XP!</div>
+        </div>
+        <div class="friend-card-arrow">&#x203A;</div>
+      </div>
+      <div class="friend-card" onclick="shareStreak()">
+        <div class="friend-card-icon">&#x1F3C6;</div>
+        <div class="friend-card-text">
+          <div class="friend-card-title">Share Your Streak</div>
+          <div class="friend-card-desc">Show off your progress and inspire others</div>
+        </div>
+        <div class="friend-card-arrow">&#x203A;</div>
+      </div>
+      <div class="friend-card" onclick="inviteFriend()">
+        <div class="friend-card-icon">&#x1F91D;</div>
+        <div class="friend-card-text">
+          <div class="friend-card-title">Invite to ScrollFree</div>
+          <div class="friend-card-desc">Get a friend to join and both earn 50 bonus XP</div>
+        </div>
+        <div class="friend-card-arrow">&#x203A;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TIMER ==================== -->
+  <div class="screen" id="screenTimer">
+    <div class="timer-screen">
+      <div class="timer-bg-pulse" id="timerPulse"></div>
+      <div class="timer-label" id="timerStateLabel">Choose Duration</div>
+      <div class="timer-display" id="timerDisplay">25:00</div>
+      <div class="timer-message" id="timerMessage">Put your phone down. Go outside. Touch grass.</div>
+
+      <div class="timer-presets" id="timerPresets">
+        <button class="preset-btn" onclick="setPreset(5)">5m</button>
+        <button class="preset-btn" onclick="setPreset(15)">15m</button>
+        <button class="preset-btn active" onclick="setPreset(25)">25m</button>
+        <button class="preset-btn" onclick="setPreset(45)">45m</button>
+        <button class="preset-btn" onclick="setPreset(60)">60m</button>
+      </div>
+
+      <div class="timer-actions">
+        <button class="timer-cancel" id="timerCancel" onclick="cancelTimer()" style="display:none;">Cancel</button>
+        <button class="timer-control-btn timer-start" id="timerStartBtn" onclick="toggleTimer()">GO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STATS ==================== -->
+  <div class="screen" id="screenStats">
+    <div class="stats-screen">
+      <div class="stats-header">Your Progress</div>
+
+      <div class="section-title">This Week</div>
+      <div class="week-grid" id="weekGrid"></div>
+
+      <div class="level-bar">
+        <div class="level-info">
+          <span class="level-name" id="levelName">Seedling</span>
+          <span class="level-xp" id="levelXPDisplay">0 / 100 XP</span>
+        </div>
+        <div class="level-track">
+          <div class="level-fill" id="levelFill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-bottom:16px;">
+        <div class="big-stat" style="flex:1">
+          <div class="value" id="totalHours">0</div>
+          <div class="label">Total Hours</div>
+        </div>
+        <div class="big-stat" style="flex:1">
+          <div class="value" id="totalSessions">0</div>
+          <div class="label">Sessions</div>
+        </div>
+      </div>
+
+      <div class="big-stat">
+        <div class="value" id="longestStreak">0</div>
+        <div class="label">Longest Streak (Days)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== REWARDS ==================== -->
+  <div class="screen" id="screenRewards">
+    <div class="rewards-screen">
+      <div class="rewards-header">Sticker Collection</div>
+      <div class="rewards-sub" id="rewardsCount">0 of 24 collected</div>
+
+      <div class="rewards-collected">Streak Stickers</div>
+      <div class="sticker-grid" id="streakStickers"></div>
+
+      <div class="rewards-collected">Focus Stickers</div>
+      <div class="sticker-grid" id="focusStickers"></div>
+
+      <div class="rewards-collected">Challenge Stickers</div>
+      <div class="sticker-grid" id="challengeStickers"></div>
+
+      <div class="rewards-collected">Level Stickers</div>
+      <div class="sticker-grid" id="levelStickers"></div>
+    </div>
+  </div>
+
+  <!-- ==================== SETTINGS ==================== -->
+  <div class="screen" id="screenSettings">
+    <div class="settings-screen">
+      <div class="settings-header">Settings</div>
+
+      <div class="setting-group">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Morning Reminder</div>
+            <div class="setting-sub">Remind me to focus at 8:00 AM</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')">
+            <div class="toggle-dot"></div>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Evening Reminder</div>
+            <div class="setting-sub">Remind me to unplug at 8:00 PM</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')">
+            <div class="toggle-dot"></div>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Completion Sounds</div>
+            <div class="setting-sub">Play sound when timer ends</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')">
+            <div class="toggle-dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Daily Goal</div>
+            <div class="setting-sub">Minutes of focus per day</div>
+          </div>
+          <select style="padding:8px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px;" id="dailyGoalSelect" onchange="updateDailyGoal(this.value)">
+            <option value="15">15 min</option>
+            <option value="30" selected>30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+            <option value="90">90 min</option>
+            <option value="120">120 min</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="share-btn" onclick="shareStreak()" style="margin-bottom:16px;">
+        Share My Streak
+      </button>
+
+      <button class="share-btn" onclick="resetData()" style="border-color:var(--red); color:var(--red);">
+        Reset All Data
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== NAV ==================== -->
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showScreen('home')" data-screen="home">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+      Home
+    </button>
+    <button class="nav-btn" onclick="showScreen('timer')" data-screen="timer">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      Focus
+    </button>
+    <button class="nav-btn" onclick="showScreen('rewards')" data-screen="rewards">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Stickers
+    </button>
+    <button class="nav-btn" onclick="showScreen('stats')" data-screen="stats">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6m8 0V5a2 2 0 012-2h2a2 2 0 012 2v14m4 0v-8a2 2 0 00-2-2h-2a2 2 0 00-2 2v8"/></svg>
+      Stats
+    </button>
+    <button class="nav-btn" onclick="showScreen('settings')" data-screen="settings">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      Settings
+    </button>
+  </nav>
+</div>
+
+<!-- ==================== CELEBRATION OVERLAY ==================== -->
+<!-- ==================== STICKER UNLOCK POPUP ==================== -->
+<div class="sticker-popup" id="stickerPopup">
+  <div class="sticker-popup-label">Sticker Unlocked!</div>
+  <div class="sticker-popup-emoji" id="stickerPopupEmoji"></div>
+  <div class="sticker-popup-title" id="stickerPopupName"></div>
+  <div class="sticker-popup-subtitle" id="stickerPopupDesc"></div>
+  <button class="sticker-popup-btn" onclick="closeStickerPopup()">Collect!</button>
+</div>
+
+<div class="celebration-overlay" id="celebration">
+  <div class="celebration-emoji" id="celebrationEmoji">&#127881;</div>
+  <div class="celebration-title" id="celebrationTitle">Session Complete!</div>
+  <div class="celebration-sub" id="celebrationSub">You stayed off your phone for 25 minutes.</div>
+  <div class="celebration-xp" id="celebrationXP">+50 XP</div>
+  <button class="celebration-btn" onclick="closeCelebration()">Continue</button>
+</div>
+
+<script>
+  // ==================== DATA STORE ====================
+  const STORAGE_KEY = 'scrollfree_data';
+
+  const DEFAULT_DATA = {
+    streak: 0,
+    longestStreak: 0,
+    totalXP: 0,
+    totalMinutes: 0,
+    totalSessions: 0,
+    dailyGoal: 30,
+    level: 1,
+    dailyLog: {},       // { "2026-04-02": { minutes: 30, completed: true, challenges: [0,2] } }
+    lastActiveDate: null,
+    unlockedStickers: [],  // array of sticker ids
+  };
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return { ...DEFAULT_DATA, ...JSON.parse(raw) };
+    } catch (e) {}
+    return { ...DEFAULT_DATA };
+  }
+
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  let data = loadData();
+
+  // ==================== DATE HELPERS ====================
+  function todayKey() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  function getTodayLog() {
+    const key = todayKey();
+    if (!data.dailyLog[key]) {
+      data.dailyLog[key] = { minutes: 0, completed: false, challenges: [], spinsUsed: 0, wheelChallenges: [] };
+    }
+    return data.dailyLog[key];
+  }
+
+  // ==================== STREAK LOGIC ====================
+  function updateStreak() {
+    const today = todayKey();
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+    if (data.lastActiveDate === today) return;
+
+    if (data.lastActiveDate === yesterday) {
+      data.streak++;
+    } else if (data.lastActiveDate !== today) {
+      data.streak = 1;
+    }
+
+    data.lastActiveDate = today;
+    if (data.streak > data.longestStreak) {
+      data.longestStreak = data.streak;
+    }
+    saveData();
+  }
+
+  // ==================== LEVELS ====================
+  const LEVELS = [
+    { name: 'Seedling', xp: 0 },
+    { name: 'Sprout', xp: 100 },
+    { name: 'Sapling', xp: 300 },
+    { name: 'Young Tree', xp: 600 },
+    { name: 'Growing Oak', xp: 1000 },
+    { name: 'Mighty Oak', xp: 1800 },
+    { name: 'Ancient Tree', xp: 3000 },
+    { name: 'Forest Guardian', xp: 5000 },
+    { name: 'Nature Spirit', xp: 8000 },
+    { name: 'Earth Sage', xp: 12000 },
+  ];
+
+  // ==================== STICKERS / REWARDS ====================
+  const ALL_STICKERS = [
+    // Streak stickers
+    { id: 'streak-1',   group: 'streak',    emoji: '\u{1F525}', name: 'First Flame',       desc: 'Start a 1-day streak',        check: () => data.streak >= 1 },
+    { id: 'streak-3',   group: 'streak',    emoji: '\u{2B50}',  name: 'Rising Star',        desc: '3-day streak',                check: () => data.longestStreak >= 3 },
+    { id: 'streak-7',   group: 'streak',    emoji: '\u{1F31F}', name: 'Week Warrior',       desc: '7-day streak',                check: () => data.longestStreak >= 7 },
+    { id: 'streak-14',  group: 'streak',    emoji: '\u{1F4AA}', name: 'Unstoppable',        desc: '14-day streak',               check: () => data.longestStreak >= 14 },
+    { id: 'streak-30',  group: 'streak',    emoji: '\u{1F451}', name: 'Monthly Monarch',    desc: '30-day streak',               check: () => data.longestStreak >= 30 },
+    { id: 'streak-100', group: 'streak',    emoji: '\u{1F48E}', name: 'Diamond Will',       desc: '100-day streak',              check: () => data.longestStreak >= 100 },
+
+    // Focus stickers
+    { id: 'focus-1',    group: 'focus',     emoji: '\u{1F33F}', name: 'First Breath',       desc: 'Complete your first session',  check: () => data.totalSessions >= 1 },
+    { id: 'focus-10',   group: 'focus',     emoji: '\u{1F332}', name: 'Deep Roots',         desc: '10 focus sessions',           check: () => data.totalSessions >= 10 },
+    { id: 'focus-50',   group: 'focus',     emoji: '\u{1F3D4}', name: 'Mountain Mind',      desc: '50 focus sessions',           check: () => data.totalSessions >= 50 },
+    { id: 'focus-1hr',  group: 'focus',     emoji: '\u{23F0}', name: 'Hour of Power',       desc: '60 total minutes focused',    check: () => data.totalMinutes >= 60 },
+    { id: 'focus-5hr',  group: 'focus',     emoji: '\u{1F30D}', name: 'World Changer',      desc: '5 hours total focus',         check: () => data.totalMinutes >= 300 },
+    { id: 'focus-24hr', group: 'focus',     emoji: '\u{1F680}', name: 'Full Day Free',      desc: '24 hours total focus',        check: () => data.totalMinutes >= 1440 },
+
+    // Challenge stickers
+    { id: 'chal-1',     group: 'challenge', emoji: '\u{1F3AF}', name: 'Challenge Accepted', desc: 'Complete 1 challenge',        check: () => countChallenges() >= 1 },
+    { id: 'chal-10',    group: 'challenge', emoji: '\u{1F3C5}', name: 'Go-Getter',          desc: 'Complete 10 challenges',      check: () => countChallenges() >= 10 },
+    { id: 'chal-25',    group: 'challenge', emoji: '\u{1F396}', name: 'Challenge Champ',    desc: 'Complete 25 challenges',      check: () => countChallenges() >= 25 },
+    { id: 'chal-50',    group: 'challenge', emoji: '\u{1F3C6}', name: 'Legend',              desc: 'Complete 50 challenges',      check: () => countChallenges() >= 50 },
+    { id: 'chal-goal',  group: 'challenge', emoji: '\u{2705}', name: 'Daily Goal Crusher',  desc: 'Hit your daily goal',         check: () => getTodayLog().completed },
+    { id: 'chal-5days', group: 'challenge', emoji: '\u{1F389}', name: 'Five Star Week',     desc: 'Hit daily goal 5 days',       check: () => countGoalDays() >= 5 },
+
+    // Level stickers
+    { id: 'lvl-2',      group: 'level',     emoji: '\u{1F331}', name: 'Sprouted',           desc: 'Reach Level 2',               check: () => getLevelNum() >= 2 },
+    { id: 'lvl-4',      group: 'level',     emoji: '\u{1F333}', name: 'Branching Out',      desc: 'Reach Level 4',               check: () => getLevelNum() >= 4 },
+    { id: 'lvl-6',      group: 'level',     emoji: '\u{1F334}', name: 'Tall Timber',        desc: 'Reach Level 6',               check: () => getLevelNum() >= 6 },
+    { id: 'lvl-8',      group: 'level',     emoji: '\u{1F30E}', name: 'Force of Nature',    desc: 'Reach Level 8',               check: () => getLevelNum() >= 8 },
+    { id: 'lvl-10',     group: 'level',     emoji: '\u{1F30C}', name: 'Transcended',        desc: 'Reach Level 10',              check: () => getLevelNum() >= 10 },
+    { id: 'xp-1000',    group: 'level',     emoji: '\u{1F4AB}', name: '1K Club',            desc: 'Earn 1,000 XP',               check: () => data.totalXP >= 1000 },
+  ];
+
+  function countChallenges() {
+    let total = 0;
+    for (const day of Object.values(data.dailyLog)) {
+      total += (day.challenges || []).length;
+    }
+    return total;
+  }
+
+  function countGoalDays() {
+    let total = 0;
+    for (const day of Object.values(data.dailyLog)) {
+      if (day.completed) total++;
+    }
+    return total;
+  }
+
+  function getLevelNum() {
+    const lvl = getLevel(data.totalXP);
+    return LEVELS.indexOf(lvl) + 1;
+  }
+
+  let stickerQueue = [];
+
+  function checkStickers() {
+    for (const sticker of ALL_STICKERS) {
+      if (data.unlockedStickers.includes(sticker.id)) continue;
+      if (sticker.check()) {
+        data.unlockedStickers.push(sticker.id);
+        stickerQueue.push(sticker);
+        saveData();
+      }
+    }
+    if (stickerQueue.length > 0) {
+      showNextStickerPopup();
+    }
+  }
+
+  function showNextStickerPopup() {
+    if (stickerQueue.length === 0) return;
+    const sticker = stickerQueue.shift();
+    document.getElementById('stickerPopupEmoji').textContent = sticker.emoji;
+    document.getElementById('stickerPopupName').textContent = sticker.name;
+    document.getElementById('stickerPopupDesc').textContent = sticker.desc;
+    document.getElementById('stickerPopup').classList.add('show');
+    spawnConfetti();
+  }
+
+  function closeStickerPopup() {
+    document.getElementById('stickerPopup').classList.remove('show');
+    if (stickerQueue.length > 0) {
+      setTimeout(showNextStickerPopup, 300);
+    }
+  }
+
+  function renderRewards() {
+    const groups = { streak: 'streakStickers', focus: 'focusStickers', challenge: 'challengeStickers', level: 'levelStickers' };
+
+    let totalUnlocked = 0;
+    for (const [group, containerId] of Object.entries(groups)) {
+      const stickers = ALL_STICKERS.filter(s => s.group === group);
+      const container = document.getElementById(containerId);
+      if (!container) continue;
+
+      container.innerHTML = stickers.map(s => {
+        const unlocked = data.unlockedStickers.includes(s.id);
+        if (unlocked) totalUnlocked++;
+        return `
+          <div class="sticker-card ${unlocked ? 'unlocked' : 'locked'}">
+            <div class="glow"></div>
+            ${!unlocked ? '<div class="lock-icon">\u{1F512}</div>' : ''}
+            <span class="sticker-emoji">${s.emoji}</span>
+            <div class="sticker-name">${s.name}</div>
+            <div class="sticker-req">${unlocked ? 'Collected!' : s.desc}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('rewardsCount').textContent = `${totalUnlocked} of ${ALL_STICKERS.length} collected`;
+  }
+
+  function getLevel(xp) {
+    let lvl = LEVELS[0];
+    for (const l of LEVELS) {
+      if (xp >= l.xp) lvl = l;
+      else break;
+    }
+    return lvl;
+  }
+
+  function getNextLevel(xp) {
+    for (const l of LEVELS) {
+      if (xp < l.xp) return l;
+    }
+    return LEVELS[LEVELS.length - 1];
+  }
+
+  // ==================== CHALLENGES ====================
+  const ALL_CHALLENGES = [
+    { emoji: '\u{1F333}', title: 'Go for a 10-min walk', desc: 'Leave your phone at home or in your pocket.', xp: 30 },
+    { emoji: '\u{2615}', title: 'No phone during breakfast', desc: 'Eat a meal without checking your screen.', xp: 20 },
+    { emoji: '\u{1F4D6}', title: 'Read for 15 minutes', desc: 'Pick up a physical book or magazine.', xp: 25 },
+    { emoji: '\u{1F3B5}', title: 'Listen to music intentionally', desc: 'Put on an album without multitasking.', xp: 20 },
+    { emoji: '\u{1F9D8}', title: '5 minutes of breathing', desc: 'Close your eyes and just breathe.', xp: 15 },
+    { emoji: '\u{1F4AC}', title: 'Talk to someone face-to-face', desc: 'Have a real conversation, no screens.', xp: 35 },
+    { emoji: '\u{1F30C}', title: 'Watch the sunset', desc: 'Go outside and look at the sky.', xp: 25 },
+    { emoji: '\u{270D}', title: 'Write in a journal', desc: 'Write 3 things you\'re grateful for today.', xp: 20 },
+    { emoji: '\u{1F6B6}', title: 'Take the stairs', desc: 'Choose stairs over elevator all day.', xp: 15 },
+    { emoji: '\u{1F331}', title: 'Water a plant', desc: 'Care for something living and green.', xp: 15 },
+    { emoji: '\u{1F9F9}', title: 'Tidy one space', desc: 'Clean your desk, shelf, or a drawer.', xp: 20 },
+    { emoji: '\u{1F4F5}', title: 'Phone-free hour', desc: 'Put your phone in another room for 60 min.', xp: 40 },
+    { emoji: '\u{1F3A8}', title: 'Create something', desc: 'Draw, cook, build - make something with your hands.', xp: 30 },
+    { emoji: '\u{1F6CC}', title: 'No screens 30 min before bed', desc: 'Wind down without your phone tonight.', xp: 30 },
+    { emoji: '\u{270F}', title: 'Write a handwritten note', desc: 'Write a note to someone you care about.', xp: 25 },
+    { emoji: '\u{26BD}', title: 'Bounce a ball for 5 min', desc: 'Grab any ball and just play. Be a kid again.', xp: 20 },
+    { emoji: '\u{1F46A}', title: 'Talk to a family member', desc: 'Call or visit someone in your family.', xp: 35 },
+    { emoji: '\u{1F3B2}', title: 'Play a board game', desc: 'No screens allowed - cards or board games only.', xp: 30 },
+    { emoji: '\u{1F9D1}\u{200D}\u{1F373}', title: 'Cook a meal from scratch', desc: 'Make something homemade, no delivery apps.', xp: 30 },
+    { emoji: '\u{1F6BF}', title: 'Take a cold shower', desc: '2 minutes of cold water. Wake up your body.', xp: 25 },
+    { emoji: '\u{1F3B6}', title: 'Sing or hum a song', desc: 'Out loud. Nobody is judging you.', xp: 15 },
+    { emoji: '\u{1F9E9}', title: 'Do a puzzle', desc: 'Crossword, jigsaw, sudoku - on paper, not a screen.', xp: 25 },
+    { emoji: '\u{1F490}', title: 'Pick or buy flowers', desc: 'Bring some nature indoors.', xp: 20 },
+    { emoji: '\u{1F697}', title: 'Drive with no music or podcast', desc: 'Just you and your thoughts for one drive.', xp: 25 },
+    { emoji: '\u{1F3C3}', title: 'Do 20 jumping jacks', desc: 'Get your blood pumping right now.', xp: 15 },
+    { emoji: '\u{2708}', title: 'Make a paper airplane', desc: 'Fold one and throw it. Simple joy.', xp: 10 },
+    { emoji: '\u{1F48C}', title: 'Text someone you miss', desc: 'One real message, then put the phone down.', xp: 20 },
+    { emoji: '\u{1F304}', title: 'Watch the sunrise', desc: 'Set your alarm and catch the morning light.', xp: 35 },
+    { emoji: '\u{1F9F6}', title: 'Stretch for 10 minutes', desc: 'Full body stretch. Your body will thank you.', xp: 20 },
+    { emoji: '\u{1F43E}', title: 'Pet an animal', desc: 'Dog, cat, whatever is nearby. Pure joy.', xp: 20 },
+    { emoji: '\u{1F30A}', title: 'Listen to nature sounds', desc: 'Open a window or go outside. Just listen.', xp: 15 },
+    { emoji: '\u{1F380}', title: 'Organize one drawer', desc: 'Pick the messiest drawer and fix it.', xp: 20 },
+  ];
+
+  function getTodayChallenges() {
+    // Seed daily challenges based on date - pick 3 for accepted challenges
+    const dateNum = parseInt(todayKey().replace(/-/g, ''));
+    const indices = [];
+    let seed = dateNum;
+    while (indices.length < 3) {
+      seed = (seed * 9301 + 49297) % 233280;
+      const idx = seed % ALL_CHALLENGES.length;
+      if (!indices.includes(idx)) indices.push(idx);
+    }
+    return indices.map(i => ALL_CHALLENGES[i]);
+  }
+
+  function getWheelChallenges() {
+    // Pick 8 for the wheel based on date
+    const dateNum = parseInt(todayKey().replace(/-/g, ''));
+    const indices = [];
+    let seed = dateNum + 777;
+    while (indices.length < 8) {
+      seed = (seed * 9301 + 49297) % 233280;
+      const idx = seed % ALL_CHALLENGES.length;
+      if (!indices.includes(idx)) indices.push(idx);
+    }
+    return indices.map(i => ALL_CHALLENGES[i]);
+  }
+
+  // ==================== SPIN WHEEL ====================
+  const WHEEL_COLORS = [
+    '#22c55e', '#f59e0b', '#3b82f6', '#ef4444',
+    '#a855f7', '#06b6d4', '#f97316', '#10b981'
+  ];
+
+  let wheelAngle = 0;
+  let wheelSpinning = false;
+  let wheelChallenges = [];
+  let spinsUsedToday = 0;
+  const MAX_SPINS = 3;
+
+  function initWheel() {
+    wheelChallenges = getWheelChallenges();
+    const log = getTodayLog();
+    spinsUsedToday = log.spinsUsed || 0;
+    drawWheel(0);
+    updateWheelUI();
+  }
+
+  function drawWheel(angle) {
+    const canvas = document.getElementById('wheelCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const cx = 150, cy = 150, r = 140;
+    const segments = wheelChallenges.length;
+    const arc = (2 * Math.PI) / segments;
+
+    ctx.clearRect(0, 0, 300, 300);
+
+    // Draw segments
+    for (let i = 0; i < segments; i++) {
+      const startAngle = angle + i * arc;
+      const endAngle = startAngle + arc;
+
+      // Segment fill
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, startAngle, endAngle);
+      ctx.closePath();
+      ctx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
+      ctx.fill();
+
+      // Segment border
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Emoji text
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(startAngle + arc / 2);
+      ctx.textAlign = 'center';
+      ctx.font = '24px serif';
+      ctx.fillText(wheelChallenges[i].emoji, r * 0.65, 8);
+      ctx.restore();
+    }
+
+    // Center circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
+    ctx.fillStyle = '#0a1a0f';
+    ctx.fill();
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Center text
+    ctx.fillStyle = '#22c55e';
+    ctx.font = 'bold 11px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SPIN', cx, cy + 4);
+  }
+
+  function spinWheel() {
+    if (wheelSpinning) return;
+    if (spinsUsedToday >= MAX_SPINS) return;
+
+    wheelSpinning = true;
+    document.getElementById('spinBtn').disabled = true;
+
+    const segments = wheelChallenges.length;
+    const arc = (2 * Math.PI) / segments;
+
+    // Pick a random winning segment
+    const winIdx = Math.floor(Math.random() * segments);
+
+    // Calculate target angle: spin multiple full rotations + land on winning segment
+    // The pointer is at the top (270 degrees / -90 degrees / -PI/2)
+    // We need the middle of the winning segment to align with the top
+    const targetSegmentAngle = -(winIdx * arc + arc / 2) - Math.PI / 2;
+    const fullSpins = (4 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
+    const targetAngle = targetSegmentAngle + fullSpins;
+
+    const startAngle = wheelAngle;
+    const totalRotation = targetAngle - startAngle;
+    const duration = 4000;
+    const startTime = performance.now();
+
+    function easeOut(t) {
+      return 1 - Math.pow(1 - t, 4);
+    }
+
+    function animate(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeOut(progress);
+
+      wheelAngle = startAngle + totalRotation * eased;
+      drawWheel(wheelAngle);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        wheelSpinning = false;
+        wheelAngle = targetAngle;
+
+        // Record the spin
+        spinsUsedToday++;
+        const log = getTodayLog();
+        log.spinsUsed = spinsUsedToday;
+        saveData();
+
+        // Show the won challenge
+        showWonChallenge(wheelChallenges[winIdx], winIdx);
+        updateWheelUI();
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  function showWonChallenge(challenge, idx) {
+    const el = document.getElementById('wonChallenge');
+    el.style.display = 'block';
+    el.innerHTML = `
+      <div class="won-emoji">${challenge.emoji}</div>
+      <div class="won-title">${challenge.title}</div>
+      <div class="won-desc">${challenge.desc}</div>
+      <div class="won-xp">+${challenge.xp} XP</div>
+      <div>
+        <button class="won-accept-btn" onclick="acceptWheelChallenge(${idx})">Accept Challenge!</button>
+        <button class="won-skip-btn" onclick="dismissWonChallenge()">Maybe later</button>
+      </div>
+    `;
+    spawnConfetti();
+  }
+
+  function acceptWheelChallenge(idx) {
+    const challenge = wheelChallenges[idx];
+    // Add to today's accepted challenges
+    const log = getTodayLog();
+    if (!log.wheelChallenges) log.wheelChallenges = [];
+    log.wheelChallenges.push({ ...challenge, accepted: true, completed: false });
+    saveData();
+    dismissWonChallenge();
+    renderHome();
+  }
+
+  function dismissWonChallenge() {
+    document.getElementById('wonChallenge').style.display = 'none';
+  }
+
+  function completeWheelChallenge(idx) {
+    const log = getTodayLog();
+    if (!log.wheelChallenges || !log.wheelChallenges[idx]) return;
+    if (log.wheelChallenges[idx].completed) return;
+
+    log.wheelChallenges[idx].completed = true;
+    const xp = log.wheelChallenges[idx].xp;
+    data.totalXP += xp;
+    updateStreak();
+    saveData();
+
+    showCelebration(0, xp);
+    document.getElementById('celebrationSub').textContent =
+      `Wheel challenge complete: ${log.wheelChallenges[idx].title}`;
+    setTimeout(checkStickers, 2000);
+    renderHome();
+  }
+
+  function updateWheelUI() {
+    const btn = document.getElementById('spinBtn');
+    const title = document.getElementById('wheelTitle');
+
+    if (spinsUsedToday >= MAX_SPINS) {
+      btn.disabled = true;
+      btn.textContent = 'Come back tomorrow!';
+      title.textContent = 'No spins left today';
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'SPIN!';
+      title.textContent = `Spin for a Challenge (${MAX_SPINS - spinsUsedToday} left)`;
+    }
+  }
+
+  // ==================== TIMER ====================
+  let timerInterval = null;
+  let timerSeconds = 25 * 60;
+  let timerRunning = false;
+  let timerDuration = 25;
+
+  function setPreset(minutes) {
+    if (timerRunning) return;
+    timerDuration = minutes;
+    timerSeconds = minutes * 60;
+    updateTimerDisplay();
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+
+  function updateTimerDisplay() {
+    const m = Math.floor(timerSeconds / 60);
+    const s = timerSeconds % 60;
+    document.getElementById('timerDisplay').textContent =
+      `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function toggleTimer() {
+    if (timerRunning) {
+      stopTimer(false);
+    } else {
+      startTimer();
+    }
+  }
+
+  function startTimer() {
+    timerRunning = true;
+    document.getElementById('timerStartBtn').textContent = '\u{23F8}';
+    document.getElementById('timerStartBtn').classList.remove('timer-start');
+    document.getElementById('timerStartBtn').classList.add('timer-stop');
+    document.getElementById('timerCancel').style.display = 'block';
+    document.getElementById('timerPresets').style.display = 'none';
+    document.getElementById('timerStateLabel').textContent = 'Focus Time';
+    document.getElementById('timerMessage').textContent = 'You\'re doing great. Stay present.';
+    document.getElementById('timerPulse').style.animation = 'pulse 3s infinite';
+
+    timerInterval = setInterval(() => {
+      timerSeconds--;
+      updateTimerDisplay();
+      if (timerSeconds <= 0) {
+        stopTimer(true);
+      }
+    }, 1000);
+  }
+
+  function stopTimer(completed) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+
+    const elapsed = timerDuration * 60 - timerSeconds;
+    const elapsedMinutes = Math.round(elapsed / 60);
+
+    document.getElementById('timerStartBtn').textContent = 'GO';
+    document.getElementById('timerStartBtn').classList.add('timer-start');
+    document.getElementById('timerStartBtn').classList.remove('timer-stop');
+    document.getElementById('timerCancel').style.display = 'none';
+    document.getElementById('timerPresets').style.display = 'flex';
+    document.getElementById('timerStateLabel').textContent = 'Choose Duration';
+    document.getElementById('timerMessage').textContent = 'Put your phone down. Go outside. Touch grass.';
+    document.getElementById('timerPulse').style.animation = 'none';
+
+    if (completed && elapsedMinutes > 0) {
+      const xp = elapsedMinutes * 2;
+      const log = getTodayLog();
+      log.minutes += elapsedMinutes;
+      data.totalMinutes += elapsedMinutes;
+      data.totalSessions++;
+      data.totalXP += xp;
+      updateStreak();
+
+      if (log.minutes >= data.dailyGoal) {
+        log.completed = true;
+      }
+
+      saveData();
+      showCelebration(elapsedMinutes, xp);
+      setTimeout(checkStickers, 2000);
+    }
+
+    timerSeconds = timerDuration * 60;
+    updateTimerDisplay();
+  }
+
+  function cancelTimer() {
+    stopTimer(false);
+  }
+
+  // ==================== CELEBRATION ====================
+  function showCelebration(minutes, xp) {
+    document.getElementById('celebrationSub').textContent =
+      `You stayed focused for ${minutes} minutes!`;
+    document.getElementById('celebrationXP').textContent = `+${xp} XP`;
+    document.getElementById('celebration').classList.add('show');
+    spawnConfetti();
+  }
+
+  function closeCelebration() {
+    document.getElementById('celebration').classList.remove('show');
+    showScreen('home');
+  }
+
+  function spawnConfetti() {
+    const colors = ['#22c55e', '#84cc16', '#10b981', '#f59e0b', '#3b82f6', '#a855f7'];
+    for (let i = 0; i < 40; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti';
+      el.style.left = Math.random() * 100 + '%';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDelay = Math.random() * 0.5 + 's';
+      el.style.animationDuration = (2 + Math.random() * 2) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+  }
+
+  // ==================== SHARING ====================
+  function shareStreak() {
+    const text = `I'm on a ${data.streak}-day streak on ScrollFree! ${data.totalMinutes} minutes spent living instead of scrolling. Level ${data.level} ${getLevel(data.totalXP).name}. Try it!`;
+
+    if (navigator.share) {
+      navigator.share({ title: 'ScrollFree', text }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Copied to clipboard!');
+      });
+    }
+  }
+
+  // ==================== FRIEND CHALLENGES ====================
+  function challengeFriend() {
+    const challenges = getTodayChallenges();
+    const randomChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+    const text = `${randomChallenge.emoji} I challenge you to: ${randomChallenge.title}!\n\n${randomChallenge.desc}\n\nCan you beat my ${data.streak}-day streak on ScrollFree? Download and let's see who can stay off their phone longer!\n\nscrollfree.app`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'ScrollFree Challenge',
+        text: text
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Challenge copied! Paste it in a text or DM.');
+      });
+    }
+
+    // Bonus XP for sharing
+    data.totalXP += 10;
+    saveData();
+    renderAll();
+  }
+
+  function inviteFriend() {
+    const lvl = getLevel(data.totalXP);
+    const text = `I've been using ScrollFree to break my doomscrolling habit. I'm on a ${data.streak}-day streak and Level ${LEVELS.indexOf(lvl) + 1} ${lvl.name}!\n\nIt has a spin wheel for daily challenges, sticker rewards, and focus timers. It's actually fun to NOT scroll.\n\nTry it: scrollfree.app`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'Join me on ScrollFree!',
+        text: text
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Invite copied! Send it to a friend.');
+      });
+    }
+
+    // Bonus XP for inviting
+    data.totalXP += 15;
+    saveData();
+    renderAll();
+  }
+
+  // ==================== SETTINGS ====================
+  function updateDailyGoal(val) {
+    data.dailyGoal = parseInt(val);
+    saveData();
+  }
+
+  function resetData() {
+    if (confirm('Are you sure? This will erase all your progress.')) {
+      localStorage.removeItem(STORAGE_KEY);
+      data = { ...DEFAULT_DATA };
+      renderAll();
+    }
+  }
+
+  // ==================== NAVIGATION ====================
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.screen === name);
+    });
+    if (name === 'home' || name === 'stats' || name === 'rewards') renderAll();
+  }
+
+  // ==================== RENDERING ====================
+  function renderAll() {
+    renderHome();
+    renderStats();
+    renderRewards();
+  }
+
+  function renderHome() {
+    const log = getTodayLog();
+
+    // Streak ring
+    const circumference = 534;
+    const progress = Math.min(log.minutes / data.dailyGoal, 1);
+    document.getElementById('streakProgress').style.strokeDashoffset =
+      circumference - (progress * circumference);
+    document.getElementById('streakCount').textContent = data.streak;
+
+    // Stats
+    document.getElementById('todayMinutes').textContent = log.minutes;
+    document.getElementById('totalXP').textContent = data.totalXP;
+    const lvl = getLevel(data.totalXP);
+    const lvlIdx = LEVELS.indexOf(lvl);
+    document.getElementById('levelDisplay').textContent = lvlIdx + 1;
+
+    // Update wheel UI (don't redraw canvas each time)
+    updateWheelUI();
+
+    // Render accepted wheel challenges + daily challenges
+    const list = document.getElementById('challengesList');
+    let html = '';
+
+    // Wheel challenges (accepted from spin)
+    const wheelChals = log.wheelChallenges || [];
+    html += wheelChals.map((c, i) => {
+      const done = c.completed;
+      return `
+        <div class="challenge-card ${done ? 'completed' : ''}" onclick="completeWheelChallenge(${i})" style="border-left: 3px solid var(--lime);">
+          <div class="challenge-header">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="challenge-emoji">${c.emoji}</span>
+              <div>
+                <div class="challenge-title">${c.title}</div>
+                <div class="challenge-desc">${c.desc}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="challenge-xp">+${c.xp} XP</span>
+              <div class="challenge-check">${done ? '\u2713' : ''}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Daily challenges
+    const challenges = getTodayChallenges();
+    html += challenges.map((c, i) => {
+      const done = log.challenges.includes(i);
+      return `
+        <div class="challenge-card ${done ? 'completed' : ''}" onclick="completeChallenge(${i})">
+          <div class="challenge-header">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="challenge-emoji">${c.emoji}</span>
+              <div>
+                <div class="challenge-title">${c.title}</div>
+                <div class="challenge-desc">${c.desc}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="challenge-xp">+${c.xp} XP</span>
+              <div class="challenge-check">${done ? '\u2713' : ''}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    list.innerHTML = html;
+  }
+
+  function completeChallenge(index) {
+    const log = getTodayLog();
+    if (log.challenges.includes(index)) return;
+
+    log.challenges.push(index);
+    const challenges = getTodayChallenges();
+    const xp = challenges[index].xp;
+    data.totalXP += xp;
+    updateStreak();
+    saveData();
+
+    showCelebration(0, xp);
+    document.getElementById('celebrationSub').textContent =
+      `Challenge complete: ${challenges[index].title}`;
+    setTimeout(checkStickers, 2000);
+  }
+
+  function renderStats() {
+    // Week grid
+    const grid = document.getElementById('weekGrid');
+    const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+
+    let html = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      const key = d.toISOString().split('T')[0];
+      const log = data.dailyLog[key];
+      const isToday = key === todayKey();
+      const done = log?.completed;
+      html += `
+        <div class="week-day">
+          <div class="day-label">${days[i]}</div>
+          <div class="day-dot ${done ? 'completed' : ''} ${isToday ? 'today' : ''}">
+            ${done ? '\u2713' : ''}
+          </div>
+        </div>
+      `;
+    }
+    grid.innerHTML = html;
+
+    // Level
+    const lvl = getLevel(data.totalXP);
+    const next = getNextLevel(data.totalXP);
+    document.getElementById('levelName').textContent = lvl.name;
+    document.getElementById('levelXPDisplay').textContent = `${data.totalXP} / ${next.xp} XP`;
+    const pct = next.xp > lvl.xp ? ((data.totalXP - lvl.xp) / (next.xp - lvl.xp)) * 100 : 100;
+    document.getElementById('levelFill').style.width = pct + '%';
+
+    // Big stats
+    document.getElementById('totalHours').textContent = (data.totalMinutes / 60).toFixed(1);
+    document.getElementById('totalSessions').textContent = data.totalSessions;
+    document.getElementById('longestStreak').textContent = data.longestStreak;
+  }
+
+  // ==================== INIT ====================
+  initWheel();
+  renderAll();
+  document.getElementById('dailyGoalSelect').value = data.dailyGoal;
+  setTimeout(checkStickers, 1000);
+
+  // Register service worker for PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+</script>
+</body>
+</html>
