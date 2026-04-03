@@ -1875,7 +1875,7 @@
   function challengeFriend() {
     const challenges = getTodayChallenges();
     const randomChallenge = challenges[Math.floor(Math.random() * challenges.length)];
-    const text = `${randomChallenge.emoji} I challenge you to: ${randomChallenge.title}!\n\n${randomChallenge.desc}\n\nCan you beat my ${data.streak}-day streak on LiveMore? Download and let's see who can stay off their phone longer!\n\nlivemore.app`;
+    const text = `${randomChallenge.emoji} I challenge you to: ${randomChallenge.title}!\n\n${randomChallenge.desc}\n\nCan you beat my ${data.streak}-day streak on LiveMore? Download and let's see who can stay off their phone longer!\n\nlivemoreapp.com`;
 
     if (navigator.share) {
       navigator.share({
@@ -1896,7 +1896,7 @@
 
   function inviteFriend() {
     const lvl = getLevel(data.totalXP);
-    const text = `I've been using LiveMore to break my doomscrolling habit. I'm on a ${data.streak}-day streak and Level ${LEVELS.indexOf(lvl) + 1} ${lvl.name}!\n\nIt has a spin wheel for daily challenges, sticker rewards, and focus timers. It's actually fun to NOT scroll.\n\nTry it: livemore.app`;
+    const text = `I've been using LiveMore to break my doomscrolling habit. I'm on a ${data.streak}-day streak and Level ${LEVELS.indexOf(lvl) + 1} ${lvl.name}!\n\nIt has a spin wheel for daily challenges, sticker rewards, and focus timers. It's actually fun to NOT scroll.\n\nTry it: livemoreapp.com`;
 
     if (navigator.share) {
       navigator.share({
