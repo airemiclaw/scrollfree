@@ -973,9 +973,168 @@
       font-weight: 700;
       cursor: pointer;
     }
+
+    /* ==================== SETUP / ONBOARDING ==================== */
+    .setup-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 500;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .setup-overlay.show { display: flex; }
+
+    .setup-title {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--green), var(--lime));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .setup-sub {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 32px;
+      max-width: 300px;
+    }
+
+    .interest-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+      margin-bottom: 32px;
+    }
+
+    .interest-btn {
+      padding: 16px 12px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .interest-btn .interest-emoji {
+      font-size: 28px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .interest-btn.selected {
+      border-color: var(--green);
+      background: linear-gradient(135deg, var(--surface2), var(--surface3));
+      box-shadow: 0 0 16px var(--green-glow);
+    }
+
+    .setup-go-btn {
+      padding: 16px 48px;
+      background: linear-gradient(135deg, var(--green), var(--lime));
+      border: none;
+      border-radius: 30px;
+      color: var(--bg);
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 20px var(--green-glow);
+    }
+
+    .setup-go-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .setup-skip {
+      margin-top: 16px;
+      background: none;
+      border: none;
+      color: var(--text2);
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* ==================== WEEKLY THEME BANNER ==================== */
+    .theme-banner {
+      margin: 0 24px 16px;
+      background: linear-gradient(135deg, var(--surface2), var(--surface3));
+      border: 1px solid var(--green);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-emoji { font-size: 32px; }
+
+    .theme-info { flex: 1; }
+
+    .theme-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .theme-desc {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .theme-sticker {
+      font-size: 11px;
+      color: var(--lime);
+      font-weight: 600;
+      background: var(--green-glow);
+      padding: 3px 8px;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
+
+<!-- ==================== SETUP OVERLAY ==================== -->
+<div class="setup-overlay" id="setupOverlay">
+  <div class="setup-title">Welcome to LiveMore</div>
+  <div class="setup-sub">What do you enjoy? Pick your interests and we'll personalize your challenges.</div>
+  <div class="interest-grid">
+    <button class="interest-btn" data-interest="outdoors" onclick="toggleInterest(this)">
+      <span class="interest-emoji">&#x1F333;</span>Outdoors
+    </button>
+    <button class="interest-btn" data-interest="creative" onclick="toggleInterest(this)">
+      <span class="interest-emoji">&#x1F3A8;</span>Creative
+    </button>
+    <button class="interest-btn" data-interest="social" onclick="toggleInterest(this)">
+      <span class="interest-emoji">&#x1F91D;</span>Social
+    </button>
+    <button class="interest-btn" data-interest="fitness" onclick="toggleInterest(this)">
+      <span class="interest-emoji">&#x1F4AA;</span>Fitness
+    </button>
+    <button class="interest-btn" data-interest="mindfulness" onclick="toggleInterest(this)">
+      <span class="interest-emoji">&#x1F9D8;</span>Mindfulness
+    </button>
+    <button class="interest-btn" data-interest="productivity" onclick="toggleInterest(this)">
+      <span class="interest-emoji">&#x1F4CB;</span>Productivity
+    </button>
+  </div>
+  <button class="setup-go-btn" id="setupGoBtn" onclick="completeSetup()" disabled>Pick at least 2</button>
+  <button class="setup-skip" onclick="skipSetup()">Skip for now</button>
+</div>
 
 <div class="app">
   <!-- ==================== HOME ==================== -->
@@ -1031,6 +1190,16 @@
         <div class="value" id="levelDisplay">1</div>
         <div class="label">Level</div>
       </div>
+    </div>
+
+    <!-- Weekly Theme Banner -->
+    <div class="theme-banner" id="themeBanner">
+      <div class="theme-emoji" id="themeEmoji"></div>
+      <div class="theme-info">
+        <div class="theme-name" id="themeName"></div>
+        <div class="theme-desc" id="themeDesc">Challenges this week match this theme. Complete 5 to earn a special sticker!</div>
+      </div>
+      <div class="theme-sticker" id="themeSticker">0/5</div>
     </div>
 
     <!-- Spin Wheel Section -->
@@ -1217,6 +1386,16 @@
         </div>
       </div>
 
+      <div class="setting-group">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">My Interests</div>
+            <div class="setting-sub" id="interestsSummary">Tap to change your challenge preferences</div>
+          </div>
+          <button style="padding:8px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--green); font-size:13px; cursor:pointer;" onclick="reopenSetup()">Edit</button>
+        </div>
+      </div>
+
       <button class="share-btn" onclick="shareStreak()" style="margin-bottom:16px;">
         Share My Streak
       </button>
@@ -1282,9 +1461,11 @@
     totalSessions: 0,
     dailyGoal: 30,
     level: 1,
-    dailyLog: {},       // { "2026-04-02": { minutes: 30, completed: true, challenges: [0,2] } }
+    dailyLog: {},
     lastActiveDate: null,
-    unlockedStickers: [],  // array of sticker ids
+    unlockedStickers: [],
+    interests: [],        // ['outdoors','creative','social','fitness','mindfulness','productivity']
+    setupComplete: false,  // has the user picked interests?
   };
 
   function loadData() {
@@ -1481,65 +1662,104 @@
   }
 
   // ==================== CHALLENGES ====================
-  const ALL_CHALLENGES = [
-    { emoji: '\u{1F333}', title: 'Go for a 10-min walk', desc: 'Leave your phone at home or in your pocket.', xp: 30 },
-    { emoji: '\u{2615}', title: 'No phone during breakfast', desc: 'Eat a meal without checking your screen.', xp: 20 },
-    { emoji: '\u{1F4D6}', title: 'Read for 15 minutes', desc: 'Pick up a physical book or magazine.', xp: 25 },
-    { emoji: '\u{1F3B5}', title: 'Listen to music intentionally', desc: 'Put on an album without multitasking.', xp: 20 },
-    { emoji: '\u{1F9D8}', title: '5 minutes of breathing', desc: 'Close your eyes and just breathe.', xp: 15 },
-    { emoji: '\u{1F4AC}', title: 'Talk to someone face-to-face', desc: 'Have a real conversation, no screens.', xp: 35 },
-    { emoji: '\u{1F30C}', title: 'Watch the sunset', desc: 'Go outside and look at the sky.', xp: 25 },
-    { emoji: '\u{270D}', title: 'Write in a journal', desc: 'Write 3 things you\'re grateful for today.', xp: 20 },
-    { emoji: '\u{1F6B6}', title: 'Take the stairs', desc: 'Choose stairs over elevator all day.', xp: 15 },
-    { emoji: '\u{1F331}', title: 'Water a plant', desc: 'Care for something living and green.', xp: 15 },
-    { emoji: '\u{1F9F9}', title: 'Tidy one space', desc: 'Clean your desk, shelf, or a drawer.', xp: 20 },
-    { emoji: '\u{1F4F5}', title: 'Phone-free hour', desc: 'Put your phone in another room for 60 min.', xp: 40 },
-    { emoji: '\u{1F3A8}', title: 'Create something', desc: 'Draw, cook, build - make something with your hands.', xp: 30 },
-    { emoji: '\u{1F6CC}', title: 'No screens 30 min before bed', desc: 'Wind down without your phone tonight.', xp: 30 },
-    { emoji: '\u{270F}', title: 'Write a handwritten note', desc: 'Write a note to someone you care about.', xp: 25 },
-    { emoji: '\u{26BD}', title: 'Bounce a ball for 5 min', desc: 'Grab any ball and just play. Be a kid again.', xp: 20 },
-    { emoji: '\u{1F46A}', title: 'Talk to a family member', desc: 'Call or visit someone in your family.', xp: 35 },
-    { emoji: '\u{1F3B2}', title: 'Play a board game', desc: 'No screens allowed - cards or board games only.', xp: 30 },
-    { emoji: '\u{1F9D1}\u{200D}\u{1F373}', title: 'Cook a meal from scratch', desc: 'Make something homemade, no delivery apps.', xp: 30 },
-    { emoji: '\u{1F6BF}', title: 'Take a cold shower', desc: '2 minutes of cold water. Wake up your body.', xp: 25 },
-    { emoji: '\u{1F3B6}', title: 'Sing or hum a song', desc: 'Out loud. Nobody is judging you.', xp: 15 },
-    { emoji: '\u{1F9E9}', title: 'Do a puzzle', desc: 'Crossword, jigsaw, sudoku - on paper, not a screen.', xp: 25 },
-    { emoji: '\u{1F490}', title: 'Pick or buy flowers', desc: 'Bring some nature indoors.', xp: 20 },
-    { emoji: '\u{1F697}', title: 'Drive with no music or podcast', desc: 'Just you and your thoughts for one drive.', xp: 25 },
-    { emoji: '\u{1F3C3}', title: 'Do 20 jumping jacks', desc: 'Get your blood pumping right now.', xp: 15 },
-    { emoji: '\u{2708}', title: 'Make a paper airplane', desc: 'Fold one and throw it. Simple joy.', xp: 10 },
-    { emoji: '\u{1F48C}', title: 'Text someone you miss', desc: 'One real message, then put the phone down.', xp: 20 },
-    { emoji: '\u{1F304}', title: 'Watch the sunrise', desc: 'Set your alarm and catch the morning light.', xp: 35 },
-    { emoji: '\u{1F9F6}', title: 'Stretch for 10 minutes', desc: 'Full body stretch. Your body will thank you.', xp: 20 },
-    { emoji: '\u{1F43E}', title: 'Pet an animal', desc: 'Dog, cat, whatever is nearby. Pure joy.', xp: 20 },
-    { emoji: '\u{1F30A}', title: 'Listen to nature sounds', desc: 'Open a window or go outside. Just listen.', xp: 15 },
-    { emoji: '\u{1F380}', title: 'Organize one drawer', desc: 'Pick the messiest drawer and fix it.', xp: 20 },
+  // ==================== WEEKLY THEMES ====================
+  const WEEKLY_THEMES = [
+    { name: 'Nature Week', emoji: '\u{1F333}', tag: 'outdoors', sticker: { id: 'theme-nature', emoji: '\u{1F3D5}', name: 'Nature Explorer', desc: 'Complete Nature Week' } },
+    { name: 'Social Week', emoji: '\u{1F91D}', tag: 'social', sticker: { id: 'theme-social', emoji: '\u{1F465}', name: 'Social Butterfly', desc: 'Complete Social Week' } },
+    { name: 'Creative Week', emoji: '\u{1F3A8}', tag: 'creative', sticker: { id: 'theme-creative', emoji: '\u{1F308}', name: 'Creative Spirit', desc: 'Complete Creative Week' } },
+    { name: 'Fitness Week', emoji: '\u{1F4AA}', tag: 'fitness', sticker: { id: 'theme-fitness', emoji: '\u{1F3C5}', name: 'Iron Will', desc: 'Complete Fitness Week' } },
+    { name: 'Mindfulness Week', emoji: '\u{1F9D8}', tag: 'mindfulness', sticker: { id: 'theme-mindful', emoji: '\u{1F54A}', name: 'Inner Peace', desc: 'Complete Mindfulness Week' } },
+    { name: 'Productivity Week', emoji: '\u{1F4CB}', tag: 'productivity', sticker: { id: 'theme-prod', emoji: '\u{26A1}', name: 'Lightning Focus', desc: 'Complete Productivity Week' } },
   ];
 
+  function getCurrentTheme() {
+    const now = new Date();
+    const weekNum = Math.floor((now.getTime() / (7 * 24 * 60 * 60 * 1000)));
+    return WEEKLY_THEMES[weekNum % WEEKLY_THEMES.length];
+  }
+
+  // ==================== CHALLENGES (with categories) ====================
+  const ALL_CHALLENGES = [
+    // Outdoors
+    { emoji: '\u{1F333}', title: 'Go for a 10-min walk', desc: 'Leave your phone at home or in your pocket.', xp: 30, tags: ['outdoors','fitness'] },
+    { emoji: '\u{1F30C}', title: 'Watch the sunset', desc: 'Go outside and look at the sky.', xp: 25, tags: ['outdoors','mindfulness'] },
+    { emoji: '\u{1F331}', title: 'Water a plant', desc: 'Care for something living and green.', xp: 15, tags: ['outdoors'] },
+    { emoji: '\u{1F490}', title: 'Pick or buy flowers', desc: 'Bring some nature indoors.', xp: 20, tags: ['outdoors','creative'] },
+    { emoji: '\u{1F304}', title: 'Watch the sunrise', desc: 'Set your alarm and catch the morning light.', xp: 35, tags: ['outdoors','mindfulness'] },
+    { emoji: '\u{1F30A}', title: 'Listen to nature sounds', desc: 'Open a window or go outside. Just listen.', xp: 15, tags: ['outdoors','mindfulness'] },
+    { emoji: '\u{1F43E}', title: 'Pet an animal', desc: 'Dog, cat, whatever is nearby. Pure joy.', xp: 20, tags: ['outdoors','social'] },
+    { emoji: '\u{1F6B6}', title: 'Take the stairs', desc: 'Choose stairs over elevator all day.', xp: 15, tags: ['outdoors','fitness'] },
+
+    // Creative
+    { emoji: '\u{1F3A8}', title: 'Create something', desc: 'Draw, cook, build - make something with your hands.', xp: 30, tags: ['creative'] },
+    { emoji: '\u{270F}', title: 'Write a handwritten note', desc: 'Write a note to someone you care about.', xp: 25, tags: ['creative','social'] },
+    { emoji: '\u{270D}', title: 'Write in a journal', desc: 'Write 3 things you\'re grateful for today.', xp: 20, tags: ['creative','mindfulness'] },
+    { emoji: '\u{1F9D1}\u{200D}\u{1F373}', title: 'Cook a meal from scratch', desc: 'Make something homemade, no delivery apps.', xp: 30, tags: ['creative'] },
+    { emoji: '\u{1F3B6}', title: 'Sing or hum a song', desc: 'Out loud. Nobody is judging you.', xp: 15, tags: ['creative'] },
+    { emoji: '\u{2708}', title: 'Make a paper airplane', desc: 'Fold one and throw it. Simple joy.', xp: 10, tags: ['creative'] },
+    { emoji: '\u{1F3B5}', title: 'Listen to music intentionally', desc: 'Put on an album without multitasking.', xp: 20, tags: ['creative','mindfulness'] },
+    { emoji: '\u{1F4D6}', title: 'Read for 15 minutes', desc: 'Pick up a physical book or magazine.', xp: 25, tags: ['creative','mindfulness'] },
+
+    // Social
+    { emoji: '\u{1F4AC}', title: 'Talk to someone face-to-face', desc: 'Have a real conversation, no screens.', xp: 35, tags: ['social'] },
+    { emoji: '\u{1F46A}', title: 'Talk to a family member', desc: 'Call or visit someone in your family.', xp: 35, tags: ['social'] },
+    { emoji: '\u{1F3B2}', title: 'Play a board game', desc: 'No screens allowed - cards or board games only.', xp: 30, tags: ['social','creative'] },
+    { emoji: '\u{1F48C}', title: 'Text someone you miss', desc: 'One real message, then put the phone down.', xp: 20, tags: ['social'] },
+    { emoji: '\u{26BD}', title: 'Bounce a ball for 5 min', desc: 'Grab any ball and just play. Be a kid again.', xp: 20, tags: ['social','fitness'] },
+
+    // Fitness
+    { emoji: '\u{1F3C3}', title: 'Do 20 jumping jacks', desc: 'Get your blood pumping right now.', xp: 15, tags: ['fitness'] },
+    { emoji: '\u{1F9F6}', title: 'Stretch for 10 minutes', desc: 'Full body stretch. Your body will thank you.', xp: 20, tags: ['fitness','mindfulness'] },
+    { emoji: '\u{1F6BF}', title: 'Take a cold shower', desc: '2 minutes of cold water. Wake up your body.', xp: 25, tags: ['fitness'] },
+
+    // Mindfulness
+    { emoji: '\u{1F9D8}', title: '5 minutes of breathing', desc: 'Close your eyes and just breathe.', xp: 15, tags: ['mindfulness'] },
+    { emoji: '\u{1F697}', title: 'Drive with no music or podcast', desc: 'Just you and your thoughts for one drive.', xp: 25, tags: ['mindfulness'] },
+    { emoji: '\u{1F6CC}', title: 'No screens 30 min before bed', desc: 'Wind down without your phone tonight.', xp: 30, tags: ['mindfulness'] },
+
+    // Productivity
+    { emoji: '\u{2615}', title: 'No phone during breakfast', desc: 'Eat a meal without checking your screen.', xp: 20, tags: ['productivity'] },
+    { emoji: '\u{1F9F9}', title: 'Tidy one space', desc: 'Clean your desk, shelf, or a drawer.', xp: 20, tags: ['productivity'] },
+    { emoji: '\u{1F4F5}', title: 'Phone-free hour', desc: 'Put your phone in another room for 60 min.', xp: 40, tags: ['productivity','mindfulness'] },
+    { emoji: '\u{1F380}', title: 'Organize one drawer', desc: 'Pick the messiest drawer and fix it.', xp: 20, tags: ['productivity'] },
+    { emoji: '\u{1F9E9}', title: 'Do a puzzle', desc: 'Crossword, jigsaw, sudoku - on paper, not a screen.', xp: 25, tags: ['productivity','creative'] },
+  ];
+
+  // Filter challenges by user interests + current weekly theme
+  function getPersonalizedChallenges() {
+    const theme = getCurrentTheme();
+    const interests = data.interests.length > 0 ? data.interests : ['outdoors','creative','social','fitness','mindfulness','productivity'];
+
+    // Prioritize: theme-matching first, then interest-matching
+    const themeMatches = ALL_CHALLENGES.filter(c => c.tags.includes(theme.tag));
+    const interestMatches = ALL_CHALLENGES.filter(c => c.tags.some(t => interests.includes(t)) && !c.tags.includes(theme.tag));
+    return [...themeMatches, ...interestMatches];
+  }
+
   function getTodayChallenges() {
-    // Seed daily challenges based on date - pick 3 for accepted challenges
+    const pool = getPersonalizedChallenges();
     const dateNum = parseInt(todayKey().replace(/-/g, ''));
-    const indices = [];
+    const picked = [];
     let seed = dateNum;
-    while (indices.length < 3) {
+    while (picked.length < 3 && picked.length < pool.length) {
       seed = (seed * 9301 + 49297) % 233280;
-      const idx = seed % ALL_CHALLENGES.length;
-      if (!indices.includes(idx)) indices.push(idx);
+      const idx = seed % pool.length;
+      if (!picked.includes(idx)) picked.push(idx);
     }
-    return indices.map(i => ALL_CHALLENGES[i]);
+    return picked.map(i => pool[i]);
   }
 
   function getWheelChallenges() {
-    // Pick 8 for the wheel based on date
+    const pool = getPersonalizedChallenges();
     const dateNum = parseInt(todayKey().replace(/-/g, ''));
-    const indices = [];
+    const picked = [];
     let seed = dateNum + 777;
-    while (indices.length < 8) {
+    while (picked.length < 8 && picked.length < pool.length) {
       seed = (seed * 9301 + 49297) % 233280;
-      const idx = seed % ALL_CHALLENGES.length;
-      if (!indices.includes(idx)) indices.push(idx);
+      const idx = seed % pool.length;
+      if (!picked.includes(idx)) picked.push(idx);
     }
-    return indices.map(i => ALL_CHALLENGES[i]);
+    return picked.map(i => pool[i]);
   }
 
   // ==================== SPIN WHEEL ====================
@@ -1944,6 +2164,8 @@
     renderHome();
     renderStats();
     renderRewards();
+    renderThemeBanner();
+    updateInterestsSummary();
   }
 
   function renderHome() {
@@ -2077,9 +2299,110 @@
     document.getElementById('longestStreak').textContent = data.longestStreak;
   }
 
+  // ==================== SETUP / ONBOARDING ====================
+  let setupInterests = [];
+
+  function toggleInterest(btn) {
+    const interest = btn.dataset.interest;
+    const idx = setupInterests.indexOf(interest);
+    if (idx === -1) {
+      setupInterests.push(interest);
+      btn.classList.add('selected');
+    } else {
+      setupInterests.splice(idx, 1);
+      btn.classList.remove('selected');
+    }
+    const goBtn = document.getElementById('setupGoBtn');
+    if (setupInterests.length >= 2) {
+      goBtn.disabled = false;
+      goBtn.textContent = "Let's Go!";
+    } else {
+      goBtn.disabled = true;
+      goBtn.textContent = 'Pick at least 2';
+    }
+  }
+
+  function completeSetup() {
+    data.interests = [...setupInterests];
+    data.setupComplete = true;
+    saveData();
+    document.getElementById('setupOverlay').classList.remove('show');
+    initWheel();
+    renderAll();
+  }
+
+  function reopenSetup() {
+    setupInterests = [...data.interests];
+    document.querySelectorAll('.interest-btn').forEach(btn => {
+      btn.classList.toggle('selected', setupInterests.includes(btn.dataset.interest));
+    });
+    const goBtn = document.getElementById('setupGoBtn');
+    goBtn.disabled = setupInterests.length < 2;
+    goBtn.textContent = setupInterests.length >= 2 ? "Save Changes" : "Pick at least 2";
+    document.getElementById('setupOverlay').classList.add('show');
+  }
+
+  function updateInterestsSummary() {
+    const el = document.getElementById('interestsSummary');
+    if (el && data.interests.length > 0) {
+      const names = data.interests.map(i => i.charAt(0).toUpperCase() + i.slice(1));
+      el.textContent = names.join(', ');
+    }
+  }
+
+  function skipSetup() {
+    data.interests = ['outdoors','creative','social','fitness','mindfulness','productivity'];
+    data.setupComplete = true;
+    saveData();
+    document.getElementById('setupOverlay').classList.remove('show');
+    initWheel();
+    renderAll();
+  }
+
+  // ==================== WEEKLY THEME RENDERING ====================
+  function renderThemeBanner() {
+    const theme = getCurrentTheme();
+    document.getElementById('themeEmoji').textContent = theme.emoji;
+    document.getElementById('themeName').textContent = theme.name;
+
+    // Count theme-related challenges completed this week
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    let themeCompleted = 0;
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      const key = d.toISOString().split('T')[0];
+      const log = data.dailyLog[key];
+      if (log) {
+        themeCompleted += (log.challenges || []).length;
+        themeCompleted += (log.wheelChallenges || []).filter(c => c.completed).length;
+      }
+    }
+
+    const progress = Math.min(themeCompleted, 5);
+    document.getElementById('themeSticker').textContent = `${progress}/5`;
+
+    // Check if theme sticker should be unlocked
+    if (progress >= 5 && !data.unlockedStickers.includes(theme.sticker.id)) {
+      data.unlockedStickers.push(theme.sticker.id);
+      stickerQueue.push(theme.sticker);
+      saveData();
+      if (stickerQueue.length === 1) showNextStickerPopup();
+    }
+  }
+
   // ==================== INIT ====================
+  // Show setup if first time
+  if (!data.setupComplete) {
+    document.getElementById('setupOverlay').classList.add('show');
+  }
+
   initWheel();
   renderAll();
+  renderThemeBanner();
   document.getElementById('dailyGoalSelect').value = data.dailyGoal;
   setTimeout(checkStickers, 1000);
 
